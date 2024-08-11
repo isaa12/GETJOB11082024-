@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Postagem</title>
+  <link rel="stylesheet" href="postagens.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <img src="#" alt="perfil" class="profile-img">
+      <h1>Faça o seu post</h1>
+    </div>
+    <div class="content">
+      <form id="postForm">
+        <div class="input-group">
+          <label for="image">Imagem</label>
+          <input type="file" id="image" name="image" accept="image/*">
+        </div>
+        <div class="input-group">
+          <label for="titulo">Título da vaga</label>
+          <input type="text" id="titulo" name="titulo">
+        </div>
+        <div class="input-group">
+          <label for="descricao">Descrição</label>
+          <textarea id="descricao" name="descricao"></textarea>
+        </div>
+        <button type="submit" class="btn-submit">PUBLICAR</button>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
+    import { getDatabase, ref as databaseRef, set } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
+
+    // Configuração do Firebase
+    const firebaseConfig = {
+      databaseURL: "https://getjob07-default-rtdb.firebaseio.com",
+      apiKey: "AIzaSyA7MR5Rk2bnDdJy8zmoTMuoiB9yGMdk92A",
+      authDomain: "getjob07.firebaseapp.com",
+      projectId: "getjob07",
+      storageBucket: "getjob07.appspot.com",
+      messagingSenderId: "745501702401",
+      appId: "1:745501702401:web:ebbb56e1de6acef4040300",
+      measurementId: "G-KDH80X03B7"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const storage = getStorage(app);
+    const database = getDatabase(app);
+
+    // Função para lidar com o envio do formulário
+    document.getElementById('postForm').addEventListener('submit', async function(event) {
+      event.preventDefault(); // Impede o envio padrão do formulário
+
+      // Coletar dados do formulário
+      const titulo = document.getElementById('titulo').value;
+      const descricao = document.getElementById('descricao').value;
+      const imageFile = document.getElementById('image').files[0];
+
+      // Gerar um ID único para a postagem
+      const postId = Date.now(); // Você pode usar um ID mais robusto se preferir
+
+      let imageUrl = '';
+      if (imageFile) {
+        // Upload da imagem para o Firebase Storage
+        const imageRef = storageRef(storage, 'images/' + postId + '_' + imageFile.name);
+        await uploadBytes(imageRef, imageFile);
+        imageUrl = await getDownloadURL(imageRef);
+      }
+
+      // Referência para o local onde os dados serão salvos no Firebase
+      const postRef = databaseRef(database, 'posts/' + postId);
+
+      // Salvar os dados no Firebase Realtime Database
+      await set(postRef, {
+        titulo: titulo,
+        descricao: descricao,
+        imagem: imageUrl
+      });
+
+      // Informar ao usuário que a postagem foi salva
+      alert('Postagem publicada com sucesso!');
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Postagens</title>
+  <link rel="stylesheet" href="areadepostagem.css">
+  <style>
+    .postagem {
+  display: inline-block;
+  width: 25%; /* adjust the width to your liking */
+  margin: 7px;
+  padding: 5px;
+  border: 1px solid #ddd;
+  border-radius: 2px;
+}
+
+.postagem h2 {
+  font-size: 18px; /* reduce the font size */
+  text-align: center;
+}
+
+.postagem p {
+  font-size: 14px; /* reduce the font size */
+  white-space: pre-wrap;
+}
+
+.postagem img {
+  display: block;
+  margin: 0 auto;
+  max-width: 80%; /* make the image fit within the postagem width */
+  height: auto;
+}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Encontre sua vaga de emprego aqui!</h1>
+    <div class="search-bar">
+      <input type="search" id="search-input" placeholder="Pesquisar...">
+      <br>
+      <button id="filter-button"><i class="fas fa-filter"></i>Filtragem</button>
+    </div>
+  </header>
+  <main>
+    <div class="postagens-container">
+      <h2 class="titulo">
+        Encontre as vagas de emprego mais relevantes na sua localidade escolhida
+        <span> / Confira!</span>
+      </h2>
+    </div>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getDatabase, ref as databaseRef, get } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
+
+    // Configuração do Firebase
+    const firebaseConfig = {
+      databaseURL: "https://getjob07-default-rtdb.firebaseio.com",
+      apiKey: "AIzaSyA7MR5Rk2bnDdJy8zmoTMuoiB9yGMdk92A",
+      authDomain: "getjob07.firebaseapp.com",
+      projectId: "getjob07",
+      storageBucket: "getjob07.appspot.com",
+      messagingSenderId: "745501702401",
+      appId: "1:745501702401:web:ebbb56e1de6acef4040300",
+      measurementId: "G-KDH80X03B7"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+    // Função para criar uma postagem
+    function criarPostagem(postagem) {
+      const descricaoQuebrada = quebraLinha(postagem.descricao, 9);
+      const postagemHTML = `
+        <div class="postagem">
+          ${postagem.imagem ? `<img src="${postagem.imagem}" alt="Imagem da postagem">` : ''}
+          <h2>${postagem.titulo}</h2>
+          <p>${descricaoQuebrada}</p>
+        </div>
+      `;
+      return postagemHTML;
+    }
+
+    // Função para quebrar a linha da descrição
+    function quebraLinha(texto, palavrasPorLinha) {
+      const palavras = texto.split(' ');
+      let linhas = '';
+      for (let i = 0; i < palavras.length; i += palavrasPorLinha) {
+        linhas += palavras.slice(i, i + palavrasPorLinha).join(' ') + '\n';
+      }
+      return linhas;
+    }
+
+    // Função para exibir as postagens
+    async function exibirPostagens() {
+      const postagensContainer = document.querySelector('.postagens-container');
+      postagensContainer.innerHTML = '';
+      
+      const postagensRef = databaseRef(database, 'posts');
+      const snapshot = await get(postagensRef);
+      
+      if (snapshot.exists()) {
+        const postagens = snapshot.val();
+        for (let postId in postagens) {
+          const postagem = postagens[postId];
+          postagensContainer.innerHTML += criarPostagem(postagem);
+        }
+      } else {
+        postagensContainer.innerHTML = '<p>Não há postagens disponíveis.</p>';
+      }
+    }
+
+    // Chamar a função para exibir as postagens ao carregar a página
+    exibirPostagens();
+  </script>
+</body>
+</html>
